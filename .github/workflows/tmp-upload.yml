@@ -1,0 +1,27 @@
+name: tmp-upload
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download release asset and deploy as index.html
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download tmp-0.31-loading-fix --pattern 'xian-shang-si-miao-3d.html' --dir /tmp/dl
+          ls -l /tmp/dl
+          SIZE=$(stat -c%s /tmp/dl/xian-shang-si-miao-3d.html)
+          echo "size=$SIZE"
+          test "$SIZE" = "49939799"
+          cp /tmp/dl/xian-shang-si-miao-3d.html index.html
+      - name: Commit and push index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Update index.html to v0.31 loading fix" || echo "no changes to commit"
+          git push
